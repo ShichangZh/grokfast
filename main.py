@@ -10,7 +10,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from grokfast import *
+from grokfast import gradfilter_ma, gradfilter_ema
 
 
 class Block(nn.Module):
@@ -90,7 +90,12 @@ def multiplication_mod_p_data(p, eq_token, op_token):
 def main(args):
     torch.manual_seed(args.seed)
 
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    if torch.cuda.is_available():
+        device = torch.device(f"cuda:{args.device_id}")
+    else:
+        device = torch.device("cpu")
+    # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    # device = torch.device("cpu")
 
     # tokens for <op> and <=>. It's not clear why <=> is needed at all since it
     # has no effect on the output, but we'll leave it in to best follow the
@@ -245,6 +250,8 @@ if __name__ == "__main__":
     parser.add_argument("--p", type=int, default=97)
     parser.add_argument("--budget", type=int, default=3e5)
     parser.add_argument("--batch_size", type=int, default=512)
+    # parser.add_argument("--batch_size", type=int, default=8)
+    parser.add_argument("--device_id", type=int, default=0)
     parser.add_argument("--lr", type=float, default=1e-3)
     parser.add_argument("--beta1", type=float, default=0.9)
     parser.add_argument("--beta2", type=float, default=0.98)
